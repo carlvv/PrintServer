@@ -1,0 +1,7 @@
+/*.exe
+*.xml
+*.iml
+/shelf/
+/workspace.xml
+/venv
+/.idea
