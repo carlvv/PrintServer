@@ -1,21 +1,14 @@
 import os
 import sys
 import time
-from imap_tools import MailBox, A
+from imap_tools import MailBox, AND
 from bs4 import BeautifulSoup
 
-email_server = ""
-username = ""
-password = ""
-email_whitelist = []
-printer = ""
-sleeptime = 0
 
-
-def emailListener():
+def emailListener(email_server, username, password, sleeptime, email_whitelist, printer):
     while True:
         with MailBox(email_server).login(username, password) as mailbox:
-            for msg in mailbox.fetch(A(seen=False)):
+            for msg in mailbox.fetch(AND(seen=False)):
                 for currentMail in email_whitelist:
                     if msg.from_ == currentMail:
                         for att in msg.attachments:
@@ -27,20 +20,27 @@ def emailListener():
         time.sleep(sleeptime)
 
 
-try:
-    with open('config.xml', 'r') as f:
-        credentials = f.read()
-        Bs_data = BeautifulSoup(credentials, "lxml")
-        email_server = Bs_data.find("server").text
-        username = Bs_data.find("username").text
-        password = Bs_data.find("password").text
-        sleeptime = int(Bs_data.find("sleeptime").text)
-        email_whitelist = Bs_data.find("whitelist").text.strip().split(";")
-        if sys.platform == "linux" or sys.platform == "linux2":
-            printer = Bs_data.find("printer-linux").text
-        elif sys.platform == "win32":
-            printer = "cmd /c " + os.getcwd() + "\\" + Bs_data.find("printer-win").text
-    os.chdir("Attachments")
-    emailListener()
-except KeyboardInterrupt:
-    exit(0)
+def main():
+    try:
+        with open('config.xml', 'r') as f:
+            credentials = f.read()
+            bs_data = BeautifulSoup(credentials, "lxml")
+            if sys.platform == "linux" or sys.platform == "linux2":
+                printer = bs_data.find("printer-linux").text
+            elif sys.platform == "win32":
+                printer = "cmd /c " + os.getcwd() + "\\" + bs_data.find("printer-win").text
+        if not os.path.exists("Attachments"):
+            os.mkdir("Attachments")
+        os.chdir("Attachments")
+        emailListener(bs_data.find("server").text,
+                      bs_data.find("username").text,
+                      bs_data.find("password").text,
+                      int(bs_data.find("sleep-time").text),
+                      bs_data.find("whitelist").text.strip().split(";"),
+                      printer)
+    except KeyboardInterrupt:
+        exit(0)
+
+
+if __name__ == '__main__':
+    main()
