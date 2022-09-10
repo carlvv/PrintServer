@@ -21,7 +21,7 @@ def emailListener():
                         for att in msg.attachments:
                             if att.filename[len(att.filename) - 4:] == ".pdf":
                                 print("Printing: " + att.filename + " from " + msg.from_)
-                                with open(att.filename.join(), "wb") as binary_file:
+                                with open(att.filename, "wb") as binary_file:
                                     binary_file.write(att.payload)
                                 os.system(printer.format(att.filename))
         time.sleep(sleeptime)
@@ -39,7 +39,7 @@ try:
         if sys.platform == "linux" or sys.platform == "linux2":
             printer = Bs_data.find("printer-linux").text
         elif sys.platform == "win32":
-            printer = Bs_data.find("printer-win").text
+            printer = "cmd /c " + os.getcwd() + "\\" + Bs_data.find("printer-win").text
     os.chdir("Attachments")
     emailListener()
 except KeyboardInterrupt:
